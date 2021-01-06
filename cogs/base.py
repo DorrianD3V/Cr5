@@ -168,6 +168,38 @@ class Base(commands.Cog, name='Основное'):
 
         await ctx.send('Ваш баг был успешно отправлен. Спасибо вам за желание нам помочь!')
 
+    @commands.command(name='about')
+    async def about(self, ctx: commands.Context):
+        """Информация про бота"""
+        embed = discord.Embed() \
+                       .set_author(name='Про Cr5',
+                                   icon_url=self.bot.user.avatar_url)
+
+        embed.description = ("**Cr5** — многофункциональный дискорд-бот для вашего сервера, который поможет"
+                             " вам сделать ваш сервер в разы лучше, комфортнее и уникальнее!\n\n"
+                             
+                             "Cr5 может много чего, начиная от простых команд позволяющих получить информацию о"
+                             " пользователе или роли, заканчивая очень полезными утилитами по типу умного калькулятора,"
+                             " прогноза погоды и много-много другого!\n\n"
+                             
+                             "Сейчас Cr5 находится в стадии рений разработки, но он всё время дорабатывается и улучшается,"
+                             " становясь всё лучше и лучше.")
+
+        embed.add_field(name='Ссылки',
+                        value='[Добавить бота](https://discord.com/oauth2/authorize?client_id=795289995199381514&permissions=8&scope=bot)\n'
+                              '[GitHub](https://github.com/DorrianD3V/Cr5)\n'
+                              '[Сервер поддержки](https://discord.gg/gEHSVK5779)')
+
+        embed.add_field(name='\u200b',
+                        value='\u200b')
+
+        embed.add_field(name='Статистика',
+                        value=f'Серверов: **{len(self.bot.guilds)}**\n'
+                              f'Команд: **{len(self.bot.commands)}**\n'
+                              f'Пользователей: **{sum(x.member_count for x in self.bot.guilds)}**\n'
+                              f'Каналов: **{sum(len(x.channels) for x in self.bot.guilds)}**')
+
+        await ctx.send(embed=embed)
 
 def setup(bot: commands.Bot):
     bot.add_cog(Base(bot))
