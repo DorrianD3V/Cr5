@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+from traceback import format_exception
 from hashlib import shake_128
 
 from cogs.help import HelpCommand
@@ -71,6 +72,15 @@ class ErrorHandler(commands.Cog):
             return await ctx.send(f'<:cr5_error:796048425115844658> Вы ввели некорректные аргументы. '
                                   f'Справка по команде `{ctx.command}`:',
                                   embed=await HelpCommand(ctx).command_help(ctx.command))
+
+        else:
+            exception = "\n".join(format_exception(type(error), error, error.__traceback__, 1, False))
+            await ctx.send(embed=self.error_message('Произошла ошибка при выполнении этой команды.',
+                                                    f'```py\n{exception[:1950]}\n```\n\n'
+                                                    'Обратитесь к разработчикам бота на [сервере поддержки](https://discord.gg/gEHSVK5779), '
+                                                    'если вы считаете, что эта ошибка должна быть исправлена.'))
+            channel = await self.bot.fetch_channel(self.bot.config.channels['exceptions'])
+            await channel.send(exception[:2000])
 
 
 def setup(bot: commands.Bot):
