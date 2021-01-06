@@ -1,0 +1,173 @@
+import discord
+from discord.ext import commands
+
+from typing import Union
+from socket import gethostbyname
+from urllib.parse import urlparse
+
+import datetime
+import time
+
+import humanize
+import humanize.i18n
+
+import re
+import aiohttp
+
+import platform
+import psutil
+
+
+humanize.i18n.activate('ru_RU')
+
+class Base(commands.Cog, name='Основное'):
+    """Все основные команды бота."""
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @commands.command(name='ping')
+    async def ping(self, ctx: commands.Context):
+        """Получить пинг бота"""
+
+        data = {}
+
+        start = datetime.datetime.now()
+        m = await ctx.send('Получение информации...')
+        end = datetime.datetime.now()
+        
+        data['Задержка вебсокета'] = f'{round(self.bot.latency*1000, 2)} ms'
+        data['Отправление сообщений'] = f'{round((end - start).total_seconds() * 1000, 2)} ms'
+        data['Получение сообщений'] = f'N/A ms'
+
+        embed = discord.Embed(title='Пинг бота') \
+                       .set_author(name=self.bot.user.name,
+                                   icon_url=self.bot.user.avatar_url)
+
+        embed.description = '\n'.join(f'**{k}:** {v}' for k, v in data.items())
+
+        await m.edit(content=None,
+                     embed=embed)
+
+    @commands.command(name='lookup',
+                      aliases=['info'],
+                      usage='<пользователь, роль, приглашение на сервер и т.д.>')
+    async def lookup(self, ctx: commands.Context, *,
+                     arg: Union[discord.Member, discord.Role,
+                                discord.User, discord.TextChannel,
+                                discord.CategoryChannel, discord.VoiceChannel,
+                                discord.Emoji, discord.Invite]):
+        """С помощью этой команды вы сможете получить информацию о пользователе, роли, канале, приглашении и эмодзи."""
+        
+        if type(arg) != discord.Invite:
+            embed = discord.Embed(title=arg.name)
+
+        if type(arg) in (discord.Member, discord.User):
+            embed.set_thumbnail(url=arg.avatar_url)
+            embed.add_field(name='Создан', value=f'{humanize.naturaldate(arg.created_at)} ({humanize.naturaldelta(arg.created_at)} назад)')
+            embed.add_field(name='ID', value=str(arg.id))
+            embed.add_field(name='Бот?', value='Да' if arg.bot else 'Нет')
+
+        if type(arg) == discord.Member:
+            embed.add_field(name='Присоединился', value=f'{humanize.naturaldate(arg.joined_at)} ({humanize.naturaldelta(arg.joined_at)} назад)')
+            embed.add_field(name='Цвет никнейма', value=str(arg.color))
+            embed.add_field(name='\u200b', value='\u200b')
+            embed.color = arg.color.value
+
+        if type(arg) == discord.Role:
+            embed.add_field(name='Цвет', value=str(arg.color))
+            embed.add_field(name='Упоминаемая?', value='Да' if arg.mentionable else 'Нет')
+            embed.add_field(name='Отдельная?', value='Да' if arg.hoist else 'Нет')
+            embed.add_field(name='Позиция', value=str(arg.position))
+            embed.add_field(name='Пользователей с этой ролью', value=str(len(arg.members)))
+            embed.add_field(name='Создан', value=f'{humanize.naturaldate(arg.created_at)}')
+            embed.add_field(name='ID', value=str(arg.id))
+            embed.color = arg.color.value
+
+        if type(arg) == discord.VoiceChannel:
+            embed.add_field(name='Битрейт', value=f'{arg.bitrate} кБит')
+            embed.add_field(name='Лимит пользователей', value=str(arg.user_limit))
+            embed.add_field(name='Создан', value=f'{humanize.naturaldate(arg.created_at)}')
+            embed.add_field(name='Позиция', value=str(arg.position))
+            embed.add_field(name='ID', value=str(arg.id))
+            embed.add_field(name='\u200b', value='\u200b')
+        
+        if type(arg) == discord.TextChannel:
+            embed.add_field(name='Создан', value=f'{humanize.naturaldate(arg.created_at)}')
+            embed.add_field(name='NSFW?', value='Да' if arg.nsfw else 'Нет')
+            embed.add_field(name='Позиция', value=str(arg.position))
+            embed.add_field(name='Задержка', value=f'{arg.slowmode_delay} секунд')
+            embed.add_field(name='ID', value=str(arg.id))
+            embed.add_field(name='\u200b', value='\u200b')
+        
+        if type(arg) == discord.CategoryChannel:
+            embed.add_field(name='Создан', value=f'{humanize.naturaldate(arg.created_at)}')
+            embed.add_field(name='Каналов', value=f'{len(arg.channels)}')
+            embed.add_field(name='Позиция', value=str(arg.position))
+            embed.add_field(name='ID', value=str(arg.id))
+
+        if type(arg) == discord.Emoji:
+            embed.add_field(name='Создан', value=f'{humanize.naturaldate(arg.created_at)}')
+            embed.add_field(name='Raw', value=f'\\{arg}')
+            embed.add_field(name='ID', value=str(arg.id), inline=False)
+            embed.set_thumbnail(url=arg.url)
+        
+        if type(arg) == discord.Invite:
+            embed = discord.Embed(title=arg.guild.name)
+            embed.set_thumbnail(url=arg.guild.icon_url)
+            embed.add_field(name='Пользователей', value=str(arg.approximate_member_count))
+            embed.add_field(name='Пользователей в сети', value=str(arg.approximate_presence_count))
+            embed.add_field(name='Пригласивший', value=f'{arg.inviter or "Unknown#0000"}')
+            embed.add_field(name='Канал', value=f'{arg.channel}')
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='statistic', aliases=['stats'])
+    async def stats(self, ctx: commands.Context):
+        """Статистика бота."""
+
+        embed = discord.Embed() \
+                       .set_author(name='Статистика бота',
+                                   icon_url=self.bot.user.avatar_url) \
+                       .set_footer(text=f'Пинг: {round(self.bot.latency*1000, 2)}ms')
+        
+        embed.add_field(name='Библиотеки',
+                        value=f'[Python](https://python.org) {platform.python_version()}\n'
+                              f'[discord.py](https://pypi.org/project/discord.py/) {discord.__version__}\n')
+
+        memory = psutil.virtual_memory()
+        embed.add_field(name='ОЗУ',
+                        value=f'{humanize.naturalsize(memory.used)}/{humanize.naturalsize(memory.total)}')
+        
+        embed.add_field(name='Процессор',
+                        value=f'{psutil.cpu_percent()}%')
+            
+        embed.add_field(name='Серверов',
+                        value=str(len(self.bot.guilds)))
+
+        embed.add_field(name='Пользователей',
+                        value=sum([x.member_count for x in self.bot.guilds]))
+
+        embed.add_field(name='Эмодзи',
+                        value=len(self.bot.emojis))
+
+        await ctx.send(embed=embed)
+
+    @commands.command(name='bug')
+    async def bug(self, ctx: commands.Context, *, text):
+        """Нашли ошибку в боте? Сообщите нам о ней через эту команду!"""
+        if len(text) < 10 or len(text) > 255:
+            return await ctx.send(f'Длина бага должна быть от 10 до 255 символов.')
+
+        channel = await self.bot.fetch_channel(self.bot.config.channels['bugs'])
+        bug_id = await self.bot.db.utils.Counter.add('bugs', 1)
+
+        await channel.send(embed=discord.Embed(title=f'Баг #{bug_id}',
+                                               description=text) \
+                                        .set_footer(text=ctx.author.name,
+                                                    icon_url=ctx.author.avatar_url))
+
+        await ctx.send('Ваш баг был успешно отправлен. Спасибо вам за желание нам помочь!')
+
+
+def setup(bot: commands.Bot):
+    bot.add_cog(Base(bot))
