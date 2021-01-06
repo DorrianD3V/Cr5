@@ -1,6 +1,7 @@
 import discord
-from discord.ext import commands
+import os, sys
 
+from discord.ext import commands
 from datetime import datetime
 
 
@@ -27,6 +28,12 @@ class Owner(commands.Cog):
             await message.edit(embed=message.embeds[0].add_field(name=f'Статус на {datetime.now().strftime("%d.%m.%Y")}',
                                                                  value=comment,
                                                                  inline=False))
+
+    @commands.command(name='restart')
+    async def restart(self, ctx: commands.Context):
+        await ctx.send(f'Restarting...')
+        await self.bot.logout()
+        os.execl(sys.executable, sys.executable, *sys.argv)
 
 
 def setup(bot: commands.Bot):

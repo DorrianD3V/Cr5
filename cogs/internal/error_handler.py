@@ -74,7 +74,7 @@ class ErrorHandler(commands.Cog):
                                   embed=await HelpCommand(ctx).command_help(ctx.command))
 
         else:
-            exception = "\n".join(format_exception(type(error), error, error.__traceback__, 1, False))
+            exception = "\n".join(format_exception(type(error), error, error.__traceback__, 5, False))
             await ctx.send(embed=self.error_message('Произошла ошибка при выполнении этой команды.',
                                                     f'```py\n{exception[:1950]}\n```\n\n'
                                                     'Обратитесь к разработчикам бота на [сервере поддержки](https://discord.gg/gEHSVK5779), '
