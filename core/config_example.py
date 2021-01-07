@@ -1,3 +1,5 @@
+import discord
+
 
 class Config:
     token = 'Токен бота'
@@ -23,3 +25,6 @@ class Config:
         'JISHAKU_NO_DM_TRACEBACK': '1',
         'JISHAKU_HIDE': '1'
     }
+
+    activity = discord.Activity(type=discord.ActivityType.listening,
+                                name='c.help')

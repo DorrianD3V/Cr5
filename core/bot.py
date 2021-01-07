@@ -6,12 +6,15 @@ from jishaku.modules import resolve_extensions
 from ext import Logger
 from .database import Database
 
+from aiohttp import ClientSession
+
 
 class Bot(commands.AutoShardedBot):
     def __init__(self, config, **kwargs):
         super().__init__(**kwargs)
         self.config = config
         self.db = Database(self.config.database)
+        self.session = ClientSession(loop=self.loop)
     
     async def on_ready(self):
         Logger.info('Ready')
@@ -19,6 +22,7 @@ class Bot(commands.AutoShardedBot):
     async def on_connect(self):
         Logger.info(f'Connected to Discord API as {self.user} ({self.user.id})')
         await self.db.connect()
+        await self.change_presence(activity=self.config.activity)
 
     def load_extensions(self):
         for extension in self.config.extensions:
