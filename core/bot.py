@@ -5,6 +5,7 @@ from jishaku.modules import resolve_extensions
 
 from ext import Logger
 from .database import Database
+from .context import Context
 
 from aiohttp import ClientSession
 
@@ -16,6 +17,9 @@ class Bot(commands.AutoShardedBot):
         self.db = Database(self.config.database)
         self.session = ClientSession(loop=self.loop)
     
+    async def get_context(self, message, *, cls=None):
+        return await super().get_context(message, cls=Context)
+
     async def on_ready(self):
         Logger.info('Ready')
 
