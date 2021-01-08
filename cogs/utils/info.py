@@ -8,7 +8,7 @@ from urllib.parse import quote
 from typing import Union
 
 
-class Utils(commands.Cog):
+class Utils(commands.Cog, name='Утилиты'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.owm = OWM(self.bot.config.tokens['OWM'])
