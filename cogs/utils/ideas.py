@@ -193,7 +193,7 @@ class Utils(commands.Cog, name='Утилиты'):
 
             try:
                 user = await self.bot.fetch_user(idea['author_id'])
-                await user.send(embed=discord.Embed(description=f'**[Модератор добавил комментарий на вашу идею]({message.jump_url})**') \
+                await user.send(embed=discord.Embed(description=f'**[Модератор добавил комментарий на вашу идею]({msg.jump_url})**') \
                                             .set_footer(text=msg.guild.name,
                                                         icon_url=msg.guild.icon_url))
             except (discord.Forbidden, discord.NotFound):
