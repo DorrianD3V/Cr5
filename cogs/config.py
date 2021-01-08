@@ -2,7 +2,9 @@ import discord
 from discord.ext import commands
 
 
-class Config(commands.Cog):
+class Config(commands.Cog, name='Конфигурация'):
+    """Команды, которые позволят вам настроить бота."""
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 

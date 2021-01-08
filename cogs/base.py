@@ -22,6 +22,7 @@ humanize.i18n.activate('ru_RU')
 
 class Base(commands.Cog, name='Основное'):
     """Все основные команды бота."""
+    
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
