@@ -86,8 +86,10 @@ class Utils(commands.Cog):
     async def idea(self, ctx: commands.Context, *, text):
         """Предложить идею.
         
-        Для удаления своей идеи восспользуйтесь `idea delete <ID>`
-        Для изменения своей идеи восспользуйтесь `idea edit <ID> <текст>`"""
+        Для того чтобы отредактировать свою идею восспользуйтесь `idea edit <ID> <текст>`
+        
+        Чтобы принять или отклонить идею, восспользуйтесь `idea accept/decline <ID> [комментарий]`
+        Вы также можете добавить комментарий к идее, процитировав сообщение с идеей"""
 
         try:
             channel = await self.bot.db.execute('SELECT * FROM idea_channel WHERE guild_id=$1', [ctx.guild.id])
@@ -102,7 +104,8 @@ class Utils(commands.Cog):
                                                       .set_footer(text=ctx.author.name,
                                                                   icon_url=ctx.author.avatar_url))
 
-            await self.bot.db.execute('INSERT INTO ideas VALUES ($1, $2, $3)', [ctx.guild.id, idea_id, message.id])
+            await self.bot.db.execute('INSERT INTO ideas VALUES ($1, $2, $3, $4)',
+                                      [ctx.guild.id, idea_id, message.id, ctx.author.id])
 
             await message.add_reaction('👍')
             await message.add_reaction('👎')
@@ -171,6 +174,31 @@ class Utils(commands.Cog):
         if comment:
             embed.add_field(name=f'Ответ от {ctx.author}:',
                             value=comment)
+
+        await message.edit(embed=embed)
+        await ctx.react('👌')
+
+    @idea.command(name='edit',
+                  usage='<ID идеи> <текст>')
+    async def edit(self, ctx: commands.Context, id: int, *, text):
+        """Отредактировать идею"""
+        channel = await self.bot.db.execute('SELECT * FROM idea_channel WHERE guild_id=$1', [ctx.guild.id])
+        if not channel:
+            return await ctx.send('На этом сервере не установлен канал для идей. '
+                                  'Установить канал для идей можно с помощью `idea channel <#канал>`')
+        
+        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE idea_id=$1', [id])
+        if not idea:
+            return await ctx.send('Неизвестная идея. Убедитесь, что вы верно указали ID идеи.')
+        
+        if idea['author_id'] != ctx.author.id:
+            return await ctx.send('Только автор идеи может её отредактировать')
+
+        channel = await self.bot.fetch_channel(channel['channel_id'])
+        message = await channel.fetch_message(idea['message_id'])
+
+        embed = message.embeds[0]
+        embed.description = text + ' (отредактировано автором)'
 
         await message.edit(embed=embed)
         await ctx.react('👌')
