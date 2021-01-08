@@ -18,6 +18,16 @@ class Bot(commands.AutoShardedBot):
         self.session = ClientSession(loop=self.loop)
         self.paginators = {}
     
+    async def get_prefix(self, message: discord.Message):
+        prefix = self.command_prefix
+
+        guild_prefix = await self.db.execute('SELECT * FROM prefixes WHERE guild_id=$1',
+                                             [message.guild.id])
+        if guild_prefix:
+            prefix = commands.when_mentioned_or(guild_prefix['prefix'])
+
+        return prefix(self, message)
+
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=Context)
 

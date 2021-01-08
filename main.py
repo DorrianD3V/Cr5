@@ -17,7 +17,7 @@ if __name__ == "__main__":
         os.environ[k] = v
 
     bot = Bot(config,
-              command_prefix='c.',
+              command_prefix=commands.when_mentioned_or('c.'),
               enabled_intents=discord.Intents.all(),
               allowed_mentions=discord.AllowedMentions.none(),
               chunk_members_at_startup=True,
