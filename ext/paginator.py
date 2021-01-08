@@ -8,6 +8,7 @@ class Paginator:
         self.author = ctx.author
         self.ctx = ctx
         self.pages = []
+        self.tasks = []
         self.active = False
         self.current_page = 0
         self.reactions = {
@@ -17,7 +18,7 @@ class Paginator:
         }
 
     def get_page(self, i):
-        if not len(self.pages) > i >= 0:
+        if i < 0 or i >= len(self.pages):
             return None
         page = self.pages[i]
         if type(page) == dict:
@@ -29,22 +30,33 @@ class Paginator:
 
     async def stop(self):
         self.active = False
+        [task.cancel() for task in self.tasks]
         for reaction in self.reactions.values():
             await self.msg.remove_reaction(reaction, self.ctx.guild.me)
+        del self.bot.paginators[self.msg.id]
 
     async def goto(self, i):
-        i = 0 if i >= len(self.pages) else (len(self.pages)-1 if i < 0 else i)
+        if i < 0:
+            i = len(self.pages)-1
+        elif i >= len(self.pages):
+            i = 0
+        self.current_page = i
         await self.msg.edit(**self.get_page(i))
 
-    async def listener(self, event):
+    async def listener(self):
         while self.active:
             try:
-                r = await self.bot.wait_for(event,
+                r = await self.bot.wait_for('reaction_add',
                                             check=lambda r, u: u.id == self.author.id
                                                                and r.message.id == self.msg.id,
                                             timeout=120)
             except:
                 return await self.stop()
+            
+            try:
+                await self.msg.remove_reaction(r[0], r[1])
+            except:
+                pass
             
             if str(r[0]) == self.reactions['left']:
                 await self.goto(self.current_page - 1)
@@ -61,5 +73,5 @@ class Paginator:
             await self.msg.add_reaction(reaction)
         
         self.active = True
-        self.bot.loop.create_task(self.listener('reaction_add'))
-        self.bot.loop.create_task(self.listener('reaction_remove'))
+        self.tasks.append(self.bot.loop.create_task(self.listener()))
+        self.bot.paginators[self.msg.id] = self

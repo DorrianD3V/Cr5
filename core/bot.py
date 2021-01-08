@@ -16,6 +16,7 @@ class Bot(commands.AutoShardedBot):
         self.config = config
         self.db = Database(self.config.database)
         self.session = ClientSession(loop=self.loop)
+        self.paginators = {}
     
     async def get_context(self, message, *, cls=None):
         return await super().get_context(message, cls=Context)
@@ -27,6 +28,16 @@ class Bot(commands.AutoShardedBot):
         Logger.info(f'Connected to Discord API as {self.user} ({self.user.id})')
         await self.db.connect()
         await self.change_presence(activity=self.config.activity)
+
+    async def on_message(self, message: discord.Message):
+        if message.author.bot or not message.guild:
+            return
+        await self.process_commands(message)
+
+    async def on_message_edit(self, before, after: discord.Message):
+        if after.author.bot or not after.guild:
+            return
+        await self.process_commands(after)
 
     def load_extensions(self):
         for extension in self.config.extensions:
