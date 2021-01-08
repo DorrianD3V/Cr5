@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from typing import Union
+
 
 class Utils(commands.Cog, name='Утилиты'):
     def __init__(self, bot: commands.Bot):
