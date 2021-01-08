@@ -28,3 +28,8 @@ class Config:
 
     activity = discord.Activity(type=discord.ActivityType.listening,
                                 name='c.help')
+
+    tokens = {
+        'owm': 'Токен' # Токен OpenWeatherMap API.
+                       # Используется для модуля pyowm в команде weather
+    }
