@@ -180,7 +180,8 @@ class Utils(commands.Cog, name='Утилиты'):
     async def on_message(self, message: discord.Message):
         if message.reference and message.guild and message.channel.permissions_for(message.author).manage_messages:
             message_id = message.reference.message_id
-            if not await self.bot.db.execute('SELECT * FROM ideas WHERE message_id=$1', [message_id]):
+            idea = await self.bot.db.execute('SELECT * FROM ideas WHERE message_id=$1', [message_id])
+            if not idea:
                 return
             
             msg = await message.channel.fetch_message(message_id)
