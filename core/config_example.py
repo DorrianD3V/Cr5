@@ -7,7 +7,8 @@ class Config:
     extensions = [
         'jishaku',
         'cogs.*',
-        'cogs.internal.*'
+        'cogs.internal.*',
+        'cogs.utils.*'
     ]
 
     channels = {
