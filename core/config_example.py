@@ -31,6 +31,6 @@ class Config:
                                 name='c.help')
 
     tokens = {
-        'owm': 'Токен' # Токен OpenWeatherMap API.
-                       # Используется для модуля pyowm в команде weather
+        'owm': 'Токен OpenWeatherMap API', # Используется для модуля pyowm в команде weather
+        'google_search': 'Токен Google Search API' # Используется для команды google
     }

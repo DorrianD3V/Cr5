@@ -137,6 +137,7 @@ class Utils(commands.Cog, name='Утилиты'):
                 )
 
                 embed = discord.Embed(description=f'```{language}\n{out[:500]}\n```')
+                embed.set_footer(text='Вы можете удалить это сообщение, добавив реакцию 🚮')
                 
                 if (details['result'] or details['build_result']) == 'failure':
                     embed.title = 'Ошибка'
