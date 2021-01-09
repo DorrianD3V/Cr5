@@ -32,6 +32,12 @@ PERMISSIONS = {
     'manage_emojis': 'Управлять эмодзи'
 }
 
+GIFS = {
+    'kick_members': 'https://cdn.discordapp.com/attachments/797478058679599114/797478956840255538/FrnNjibdxI.gif',
+    'ban_members': 'https://cdn.discordapp.com/attachments/797478058679599114/797479128252547093/GNTuKtuaiQ.gif'
+}
+
+
 class ErrorHandler(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -57,9 +63,18 @@ class ErrorHandler(commands.Cog):
 
         elif isinstance(error, commands.BotMissingPermissions):
             perms = [f'— **{PERMISSIONS[perm]}**' for perm in error.missing_perms]
-            return await ctx.send(embed=self.error_message('Отсувствуют нужные права',
-                                                           'Бот должен иметь следующие права, чтобы выполнить эту команду:\n' +
-                                                           '\n'.join(perms)))
+            embed = self.error_message('Отсувствуют нужные права',
+                                       'Бот должен иметь следующие права, чтобы выполнить эту команду:\n' +
+                                       '\n'.join(perms))
+
+            if error.missing_perms[0] in GIFS:
+                embed.add_field(name=f'Пожалуйста, выдайте мне право "{PERMISSIONS[error.missing_perms[0]]}", '
+                                      'чтобы я мог выполнить эту команду.',
+                                value=f'`Настройки сервера` > `Роли` > {ctx.guild.me.top_role.mention} > '
+                                      f'`"{PERMISSIONS[error.missing_perms[0]]}"`')
+                embed.set_image(url=GIFS[error.missing_perms[0]])
+
+            return await ctx.send(embed=embed)
 
         elif isinstance(error, commands.MissingPermissions):
             perms = [f'— **{PERMISSIONS[perm]}**' for perm in error.missing_perms]
