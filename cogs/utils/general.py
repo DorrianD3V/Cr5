@@ -1,4 +1,6 @@
 import discord
+import asyncio
+
 from discord.ext import commands
 
 from pyowm import OWM
@@ -17,6 +19,7 @@ class Utils(commands.Cog, name='Утилиты'):
         self.owm.config['language'] = 'ru'
 
         self.weather_mananger = self.owm.weather_manager()
+        self.sandbox_cooldown = {}
 
     @commands.command(name='calculate',
                       aliases=['calc'],
@@ -108,6 +111,11 @@ class Utils(commands.Cog, name='Утилиты'):
         if language not in languages:
             raise commands.UserInputError()
 
+        if ctx.author.id in self.sandbox_cooldown:
+            await asyncio.sleep(self.sandbox_cooldown[ctx.author.id])
+
+        self.sandbox_cooldown[ctx.author.id] = self.sandbox_cooldown.get(ctx.author.id, 0) + 2.5
+
         async with self.bot.session.post('http://api.paiza.io:80/runners/create'
                                          f'?source_code={quote(code.content)}'
                                          f'&language={language}'
@@ -137,7 +145,10 @@ class Utils(commands.Cog, name='Утилиты'):
                     embed.title = 'Выполнено'
                     embed.color = discord.Colour.green().value
 
-                await ctx.send(embed=embed)
+                self.bot.loop.create_task(ctx.deleteable_message(embed=embed))
+
+                await asyncio.sleep(2.5)
+                self.sandbox_cooldown[ctx.author.id] -= 2.5
 
 
 def setup(bot: commands.Bot):

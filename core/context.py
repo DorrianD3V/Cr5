@@ -1,4 +1,6 @@
+import asyncio
 import discord
+
 from discord.ext import commands
 
 
@@ -11,6 +13,9 @@ class Context(commands.Context):
 
             if self.bot.paginators.get(msg.id):
                 await self.bot.paginators[msg.id].stop()
+            
+            for reaction in msg.reactions:
+                self.bot.loop.create_task(msg.remove_reaction(reaction, self.guild.me))
             
             if args:
                 kwargs['content'] = args[0]
@@ -31,3 +36,18 @@ class Context(commands.Context):
             for emoji in emojis:
                 await self.message.add_reaction(emoji)
         self.bot.loop.create_task(_reaction_add_task())
+
+    async def deleteable_message(self, *args, **kwargs):
+        msg = await self.send(*args, **kwargs)
+        await msg.add_reaction('🚮')
+        try:
+            await self.bot.wait_for('reaction_add',
+                                    check=lambda r, u: r.message.id == msg.id
+                                                       and u.id == self.author.id
+                                                       and str(r) == '🚮',
+                                    timeout=60)
+        except asyncio.TimeoutError:
+            return await msg.remove_reaction('🚮', self.guild.me)
+        else:
+            await msg.delete()
+            del CACHED_RESPONSES[self.message.id]
