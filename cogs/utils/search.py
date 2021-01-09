@@ -13,6 +13,10 @@ class Utils(commands.Cog, name='Утилиты'):
                       usage='<запрос>')
     async def google(self, ctx: commands.Context, *, query):
         """Google Поиск"""
+        cache = self.bot.cache.resolve_object('google', timeout=3600)
+        if cache.get(hash(query)):
+            return await ctx.send(embed=cache.get(hash(query)))
+
         if len(query) > 200:
             return await ctx.send('Максимальная длина запроса — **200 символов**.')
         url = (
@@ -44,6 +48,7 @@ class Utils(commands.Cog, name='Утилиты'):
                     f"**[{result['title']}]({result['link']})**\n{result['snippet'][:200]}"
                     for result in data['items'][:5]
                 )
+                cache.insert(hash(query), embed)
 
             await ctx.send(embed=embed)
 

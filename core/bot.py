@@ -3,7 +3,7 @@ import traceback
 from discord.ext import commands
 from jishaku.modules import resolve_extensions
 
-from ext import Logger
+from ext import Logger, CacheManager
 from .database import Database
 from .context import Context
 
@@ -17,6 +17,7 @@ class Bot(commands.AutoShardedBot):
         self.db = Database(self.config.database)
         self.session = ClientSession(loop=self.loop)
         self.paginators = {}
+        self.cache = CacheManager(self.loop)
     
     async def get_prefix(self, message: discord.Message):
         prefix = self.command_prefix
