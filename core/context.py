@@ -12,6 +12,7 @@ class Context(commands.Context):
             if self.bot.paginators.get(msg.id):
                 await self.bot.paginators[msg.id].stop()
             
+            kwargs['content'] = None
             if args:
                 kwargs['content'] = args[0]
             
