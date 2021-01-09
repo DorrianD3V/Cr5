@@ -183,7 +183,7 @@ class Base(commands.Cog, name='Основное'):
                              " пользователе или роли, заканчивая очень полезными утилитами по типу умного калькулятора,"
                              " прогноза погоды и много-много другого!\n\n"
                              
-                             "Сейчас Cr5 находится в стадии рений разработки, но он всё время дорабатывается и улучшается,"
+                             "Сейчас Cr5 находится в стадии раней разработки, но он всё время дорабатывается и улучшается,"
                              " становясь всё лучше и лучше.")
 
         embed.add_field(name='Ссылки',
@@ -201,6 +201,28 @@ class Base(commands.Cog, name='Основное'):
                               f'Каналов: **{sum(len(x.channels) for x in self.bot.guilds)}**')
 
         await ctx.send(embed=embed)
+
+    @commands.command(name='invite',
+                      usage='[бот]')
+    async def invite(self, ctx: commands.Context, bot: discord.User = None):
+        """Получить ссылку-приглашение на бота.
+        Также, вы можете указать другого бота, чтобы получить ссылку-приглашение на него."""
+        if (bot and not bot.bot) or not bot:
+            bot = self.bot.user
+
+        embed = discord.Embed(title=f'Пригласить {bot}')
+        embed.set_thumbnail(url=bot.avatar_url)
+        embed.description = (f'**[Со всеми правами]({discord.utils.oauth_url(bot.id, permissions=discord.Permissions(8))})**\n'
+                             'Бот создаст свою роль, которая будет иметь все права.\n\n'
+                             f'**[Без прав]({discord.utils.oauth_url(bot.id)})**\n'
+                             'Бот не будет создавать свою роль, и будет иметь только те права, которые есть у '
+                             'роли @everyone\n\n'
+                             f'**[Настроить]({discord.utils.oauth_url(bot.id, permissions=discord.Permissions(-1))})**\n'
+                             'Вы можете выбрать специальные права, которые бот будет иметь.')
+        
+        await ctx.send(embed=embed)
+                             
+ 
 
 def setup(bot: commands.Bot):
     bot.add_cog(Base(bot))
