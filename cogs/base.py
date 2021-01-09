@@ -167,7 +167,8 @@ class Base(commands.Cog, name='Основное'):
                                         .set_footer(text=ctx.author.name,
                                                     icon_url=ctx.author.avatar_url))
 
-        await ctx.send('Ваш баг был успешно отправлен. Спасибо вам за желание нам помочь!')
+        await ctx.send(embed=discord.Embed(title='Ваш баг был успешно отправлен. Спасибо вам за желание нам помочь!',
+                                           description='Рекомендуем вам зайти на [сервер поддержки](https://discord.gg/gEHSVK5779).'))
 
     @commands.command(name='about')
     async def about(self, ctx: commands.Context):

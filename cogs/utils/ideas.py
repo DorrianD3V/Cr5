@@ -25,7 +25,7 @@ class Utils(commands.Cog, name='Утилиты'):
                 raise ValueError()
 
             channel = await self.bot.fetch_channel(channel['channel_id'])
-            idea_id = await self.bot.db.utils.Counter.add('ideas', 1)
+            idea_id = await self.bot.db.utils.Counter.add(f'ideas_{ctx.guild.id}', 1)
 
             message = await channel.send(embed=discord.Embed(title=f'Предложение #{idea_id}',
                                                              description=text) \
@@ -38,7 +38,11 @@ class Utils(commands.Cog, name='Утилиты'):
             await message.add_reaction('👍')
             await message.add_reaction('👎')
 
-            await ctx.react('👌')
+            if channel.id != ctx.channel.id:
+                await ctx.send(embed=discord.Embed(description=f'**Ваша идея успешно отправлена в канал {channel.mention}**') \
+                                            .add_field(name='Подсказка',
+                                                       value='Если вы ошиблись, вы можете изменить идею с помощью команды '
+                                                             '`idea edit <ID идеи> <новое содержание идеи>`'))
         except (discord.Forbidden, discord.NotFound, ValueError):
             return await ctx.send('Канал для идей не был установлен на этом сервере, '
                                   'или у меня нету прав отправлять туда сообщения. '
