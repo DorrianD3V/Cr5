@@ -12,9 +12,11 @@ class Context(commands.Context):
             if self.bot.paginators.get(msg.id):
                 await self.bot.paginators[msg.id].stop()
             
-            kwargs['content'] = None
             if args:
                 kwargs['content'] = args[0]
+
+            kwargs['content'] = kwargs.get('content', None)
+            kwargs['embed'] = kwargs.get('embed', None)
             
             await msg.edit(**kwargs)
             return msg

@@ -128,7 +128,7 @@ class Utils(commands.Cog, name='Утилиты'):
                     or '\u200b'
                 )
 
-                embed = discord.Embed(description=out)
+                embed = discord.Embed(description=f'```{language}\n{out[:500]}\n```')
                 
                 if (details['result'] or details['build_result']) == 'failure':
                     embed.title = 'Ошибка'
@@ -138,6 +138,7 @@ class Utils(commands.Cog, name='Утилиты'):
                     embed.color = discord.Colour.green().value
 
                 await ctx.send(embed=embed)
-        
+
+
 def setup(bot: commands.Bot):
     bot.add_cog(Utils(bot))

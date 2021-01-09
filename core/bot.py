@@ -45,7 +45,7 @@ class Bot(commands.AutoShardedBot):
         await self.process_commands(message)
 
     async def on_message_edit(self, before, after: discord.Message):
-        if after.author.bot or not after.guild:
+        if after.author.bot or not after.guild or before.content == after.content:
             return
         await self.process_commands(after)
 
