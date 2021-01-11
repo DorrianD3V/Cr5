@@ -12,6 +12,9 @@ from typing import Union
 from jishaku.codeblocks import codeblock_converter
 from io import BytesIO
 
+import wolframalpha
+from socket import gethostname, gethostbyname
+
 
 class Utils(commands.Cog, name='Утилиты'):
     def __init__(self, bot: commands.Bot):
@@ -21,6 +24,7 @@ class Utils(commands.Cog, name='Утилиты'):
 
         self.weather_mananger = self.owm.weather_manager()
         self.sandbox_cooldown = {}
+        self.wolfram_client = wolframalpha.Client(self.bot.config.tokens["wolfram"])
 
     @commands.command(name='calculate',
                       aliases=['calc'],
@@ -159,12 +163,33 @@ class Utils(commands.Cog, name='Утилиты'):
     async def wolframalpha(self, ctx: commands.Context, *, query):
         """Восспользуйтесь Wolfram Alpha прямо в дискорде"""
 
-        async with self.bot.session.get('http://api.wolframalpha.com/v1/simple'
-                                        f'?appid={self.bot.config.tokens["wolfram"]}'
-                                        f'&i={quote(query)}'
-                                        '&width=1000') as resp:
-            fp = BytesIO(await resp.content.read())
-            await ctx.channel.send(file=discord.File(fp, filename='output.png'))
+        res = self.wolfram_client.query(query)
+        if not hasattr(res, 'pods') or not res.pods:
+            return await ctx.send('Некорректный запрос. '
+                                  'Убедитесь, что вы ввели запрос верно, или попробуйте сформулировать запрос по-другому.\n\n'
+                                  '**Примечание:** Wolfram Alpha позволяет принимать запросы **только** на Английском языке.')
+
+        embed = discord.Embed(title='WolframAlpha')
+        embed.set_thumbnail(url='https://cdn.discordapp.com/emojis/798303048610349087.png')
+        images = {}
+
+        for pod in res.pods:
+            value = None
+            for subpod in pod.subpods:
+                if subpod.get('img'):
+                    images[subpod['img']['@src']] = int(subpod['img']['@width']) * int(subpod['img']['@height'])
+                if not value:
+                    value = subpod.get('@title') or (subpod.get('img') or {}).get('@title')
+            if value and pod.get('@title'):
+                if gethostbyname(gethostname()) not in value and 'IP' not in pod['@title']:
+                    embed.add_field(name=pod['@title'],
+                                    value=value)
+
+        if images:
+            images = sorted(images, key=lambda x: images[x], reverse=True)
+            embed.set_image(url=images[0])
+
+        await ctx.send(embed=embed)
 
 
 def setup(bot: commands.Bot):

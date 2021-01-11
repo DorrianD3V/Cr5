@@ -4,3 +4,4 @@ colorlog
 asyncpg
 psutil
 pyowm
+wolframalpha
