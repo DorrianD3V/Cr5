@@ -32,5 +32,6 @@ class Config:
 
     tokens = {
         'owm': 'Токен OpenWeatherMap API', # Используется для модуля pyowm в команде weather
-        'google_search': 'Токен Google Search API' # Используется для команды google
+        'google_search': 'Токен Google Search API', # Используется для команды google
+        'osu!': 'Токен osu! API' # Используется в команде osu!
     }
