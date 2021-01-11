@@ -4,6 +4,8 @@ from discord.ext import commands
 from traceback import format_exception
 from hashlib import shake_128
 
+from humanize import precisedelta
+
 from cogs.help import HelpCommand
 
 
@@ -54,6 +56,9 @@ class ErrorHandler(commands.Cog):
     async def on_command_error(self, ctx: commands.Context, error):
         error = getattr(error, 'original', error)
 
+        if not isinstance(error, commands.CommandOnCooldown):
+            ctx.command.reset_cooldown(ctx)
+
         if isinstance(error, commands.CommandNotFound):
             return
         
@@ -87,6 +92,11 @@ class ErrorHandler(commands.Cog):
             return await ctx.send(f'<:cr5_error:796048425115844658> Вы ввели некорректные аргументы. '
                                   f'Справка по команде `{ctx.command}`:',
                                   embed=await HelpCommand(ctx).command_help(ctx.command))
+
+        elif isinstance(error, commands.CommandOnCooldown):
+            return await ctx.send(embed=self.error_message('Команда использует задержку',
+                                                           'Данная команда использует задержку. '
+                                                           f'Пожалуйста, повторите позже через {precisedelta(error.retry_after)}.'))
 
         else:
             exception = "\n".join(format_exception(type(error), error, error.__traceback__, 5, False))

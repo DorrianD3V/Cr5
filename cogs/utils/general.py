@@ -10,6 +10,7 @@ from urllib.parse import quote
 from typing import Union
 
 from jishaku.codeblocks import codeblock_converter
+from io import BytesIO
 
 
 class Utils(commands.Cog, name='Утилиты'):
@@ -150,6 +151,20 @@ class Utils(commands.Cog, name='Утилиты'):
 
                 await asyncio.sleep(2.5)
                 self.sandbox_cooldown[ctx.author.id] -= 2.5
+
+    @commands.command(name='wolframalpha',
+                      aliases=['wolfram'],
+                      usage='<запрос>')
+    @commands.cooldown(1, 5, type=commands.BucketType.user)
+    async def wolframalpha(self, ctx: commands.Context, *, query):
+        """Восспользуйтесь Wolfram Alpha прямо в дискорде"""
+
+        async with self.bot.session.get('http://api.wolframalpha.com/v1/simple'
+                                        f'?appid={self.bot.config.tokens["wolfram"]}'
+                                        f'&i={quote(query)}'
+                                        '&width=1000') as resp:
+            fp = BytesIO(await resp.content.read())
+            await ctx.channel.send(file=discord.File(fp, filename='output.png'))
 
 
 def setup(bot: commands.Bot):
