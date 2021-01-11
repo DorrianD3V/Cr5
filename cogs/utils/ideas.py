@@ -93,7 +93,7 @@ class Utils(commands.Cog, name='Утилиты'):
             return await ctx.send('На этом сервере не установлен канал для идей. '
                                   'Установить канал для идей можно с помощью `idea channel <#канал>`')
         
-        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE idea_id=$1', [id])
+        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE guild_id=$1 AND idea_id=$2', [ctx.guild.id, id])
         if not idea:
             return await ctx.send('Неизвестная идея. Убедитесь, что вы верно указали ID идеи.')
         
@@ -128,7 +128,7 @@ class Utils(commands.Cog, name='Утилиты'):
             return await ctx.send('На этом сервере не установлен канал для идей. '
                                   'Установить канал для идей можно с помощью `idea channel <#канал>`')
         
-        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE idea_id=$1', [id])
+        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE guild_id=$1 AND idea_id=$2', [ctx.guild.id, id])
         if not idea:
             return await ctx.send('Неизвестная идея. Убедитесь, что вы верно указали ID идеи.')
         
@@ -139,6 +139,9 @@ class Utils(commands.Cog, name='Утилиты'):
         message = await channel.fetch_message(idea['message_id'])
 
         embed = message.embeds[0]
+        if embed.title != f'Предложение #{id}':
+            return await ctx.send(f'Вы не можете отредактировать идею которая уже была принята или отклонена.')
+
         embed.description = text + ' (отредактировано автором)'
 
         await message.edit(embed=embed)
@@ -154,7 +157,7 @@ class Utils(commands.Cog, name='Утилиты'):
             return await ctx.send('На этом сервере не установлен канал для идей. '
                                   'Установить канал для идей можно с помощью `idea channel <#канал>`')
         
-        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE idea_id=$1', [id])
+        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE guild_id=$1 AND idea_id=$2', [ctx.guild.id, id])
         if not idea:
             return await ctx.send('Неизвестная идея. Убедитесь, что вы верно указали ID идеи.')
         

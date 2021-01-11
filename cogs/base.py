@@ -222,7 +222,6 @@ class Base(commands.Cog, name='Основное'):
                              'Вы можете выбрать специальные права, которые бот будет иметь.')
         
         await ctx.send(embed=embed)
-                             
  
 
 def setup(bot: commands.Bot):
