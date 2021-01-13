@@ -115,8 +115,12 @@ class Utils(commands.Cog, name='Утилиты'):
         if not idea:
             return await ctx.send('Неизвестная идея. Убедитесь, что вы верно указали ID идеи.')
         
-        channel = await self.bot.fetch_channel(channel['channel_id'])
-        message = await channel.fetch_message(idea['message_id'])
+        try:
+            channel = await self.bot.fetch_channel(channel['channel_id'])
+            message = await channel.fetch_message(idea['message_id'])
+        except discord.NotFound:
+            return await ctx.send('Неизвесная идея. Убедитесь, что вы верно указали ID идеи.')
+
         embed = message.embeds[0]
         embed.title = f'Предложение #{id} (принято)'
         embed.color = discord.Colour.green().value
@@ -200,8 +204,12 @@ class Utils(commands.Cog, name='Утилиты'):
         if not idea:
             return await ctx.send('Неизвестная идея. Убедитесь, что вы верно указали ID идеи.')
         
-        channel = await self.bot.fetch_channel(channel['channel_id'])
-        message = await channel.fetch_message(idea['message_id'])
+        try:
+            channel = await self.bot.fetch_channel(channel['channel_id'])
+            message = await channel.fetch_message(idea['message_id'])
+        except discord.NotFound:
+            return await ctx.send('Неизвесная идея. Убедитесь, что вы верно указали ID идеи.')
+
         embed = message.embeds[0]
         embed.title = f'Предложение #{id} (отказано)'
         embed.color = discord.Colour.red().value
@@ -244,6 +252,46 @@ class Utils(commands.Cog, name='Утилиты'):
                                                         icon_url=msg.guild.icon_url))
             except (discord.Forbidden, discord.NotFound):
                 pass
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        if not payload.guild_id or str(payload.emoji) not in ('✅', '❌'):
+            return
+        
+        idea = await self.bot.db.execute('SELECT * FROM ideas WHERE message_id=$1', [payload.message_id])
+        if not idea:
+            return
+        
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        member = await channel.guild.fetch_member(payload.user_id)
+        if not member.guild_permissions.manage_messages:
+            return
+        message = await channel.fetch_message(payload.message_id)
+        embed = message.embeds[0]
+        if str(payload.emoji) == '✅':
+            embed.title = f'Предложение #{idea["idea_id"]} (принято)'
+            embed.color = discord.Colour.green().value
+            try:
+                user = await self.bot.fetch_user(idea['author_id'])
+                await user.send(embed=discord.Embed(description=f'**[Ваша идея была принята]({message.jump_url})**',
+                                                    color=discord.Colour.green()) \
+                                            .set_footer(text=channel.guild.name,
+                                                        icon_url=channel.guild.icon_url))
+            except (discord.Forbidden, discord.NotFound):
+                pass
+        else:
+            embed.title = f'Предложение #{idea["idea_id"]} (отказано)'
+            embed.color = discord.Colour.red().value
+            try:
+                user = await self.bot.fetch_user(idea['author_id'])
+                await user.send(embed=discord.Embed(description=f'**[Ваша идея была отказана]({message.jump_url})**',
+                                                    color=discord.Colour.red()) \
+                                            .set_footer(text=channel.guild.name,
+                                                        icon_url=channel.guild.icon_url))
+            except (discord.Forbidden, discord.NotFound):
+                pass
+        
+        await message.edit(embed=embed)
 
 
 def setup(bot: commands.Bot):
