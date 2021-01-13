@@ -70,7 +70,7 @@ class HelpCommand:
 
 @commands.command(name='help',
                     usage='help [команда]')
-async def help_command(ctx: commands.Context, command = None):
+async def help_command(ctx: commands.Context, *, command = None):
     """Справка по командам"""
     help_command = HelpCommand(ctx)
     if not command:
