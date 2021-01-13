@@ -79,6 +79,13 @@ class Moderation(commands.Cog, name='Модерация'):
             await member.ban(reason=f'[Забанен {ctx.author}] {reason or "Причина не установлена"}')
             await ctx.send(f'Вы успешно забанили **{member}** :ok_hand:')
 
+    @commands.command(name='warn',
+                      usage='<пользователь> [причина]')
+    @commands.has_permissions(manage_messages=True)
+    async def warn(self, ctx: commands.Context, user: discord.Member, *, reason = None):
+        """Выдать предупреждение пользователю"""
+        
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(Moderation(bot))

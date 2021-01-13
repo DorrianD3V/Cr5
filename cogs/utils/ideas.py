@@ -18,6 +18,10 @@ class Utils(commands.Cog, name='Утилиты'):
         
         Чтобы принять или отклонить идею, восспользуйтесь `idea accept/decline <ID> [комментарий]`
         Вы также можете добавить комментарий к идее, процитировав сообщение с идеей"""
+        text = text.replace('[', '\\[') # remove masked links
+
+        if len(text) > 1000:
+            return await ctx.send(f'Максимальная длина идеи — **1000 символов**.')
 
         try:
             channel = await self.bot.db.execute('SELECT * FROM idea_channel WHERE guild_id=$1', [ctx.guild.id])
@@ -27,10 +31,24 @@ class Utils(commands.Cog, name='Утилиты'):
             channel = await self.bot.fetch_channel(channel['channel_id'])
             idea_id = await self.bot.db.utils.Counter.add(f'ideas_{ctx.guild.id}', 1)
 
-            message = await channel.send(embed=discord.Embed(title=f'Предложение #{idea_id}',
-                                                             description=text) \
-                                                      .set_footer(text=ctx.author.name,
-                                                                  icon_url=ctx.author.avatar_url))
+            embed = discord.Embed(title=f'Предложение #{idea_id}',
+                                  description=text)
+            embed.set_footer(text=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+            if ctx.message.attachments:
+                images = [x for x in ctx.message.attachments
+                        if x.filename.split('.')[-1] in ('png', 'jpg', 'jpeg', 'gif')]
+                if images:
+                    embed.set_image(url=str(images[0].url))
+                    if len(ctx.message.attachments) > 1:
+                        embed.description += ('\n\n**Прикреплённые файлы**\n'
+                                            + '\n'.join(f'[{x.filename}]({x.url})' for x in ctx.message.attachments
+                                                        if x.filename != images[0].filename))
+                else:
+                    embed.description += ('\n\n**Прикреплённые файлы**\n'
+                                        + '\n'.join(f'[{x.filename}]({x.url})' for x in ctx.message.attachments))
+
+            message = await channel.send(embed=embed)
 
             await self.bot.db.execute('INSERT INTO ideas VALUES ($1, $2, $3, $4)',
                                       [ctx.guild.id, idea_id, message.id, ctx.author.id])
@@ -123,6 +141,10 @@ class Utils(commands.Cog, name='Утилиты'):
                   usage='<ID идеи> <текст>')
     async def edit(self, ctx: commands.Context, id: int, *, text):
         """Отредактировать идею"""
+        text = text.replace('[', '\\[') # remove masked links
+        if len(text) > 1000:
+            return await ctx.send('Максимальная длина идеи — **1000 символов.**')
+
         channel = await self.bot.db.execute('SELECT * FROM idea_channel WHERE guild_id=$1', [ctx.guild.id])
         if not channel:
             return await ctx.send('На этом сервере не установлен канал для идей. '
@@ -135,14 +157,31 @@ class Utils(commands.Cog, name='Утилиты'):
         if idea['author_id'] != ctx.author.id:
             return await ctx.send('Только автор идеи может её отредактировать')
 
-        channel = await self.bot.fetch_channel(channel['channel_id'])
-        message = await channel.fetch_message(idea['message_id'])
+        try:
+            channel = await self.bot.fetch_channel(channel['channel_id'])
+            message = await channel.fetch_message(idea['message_id'])
+        except discord.NotFound:
+            return await ctx.send('Неизвесная идея. Убедитесь, что вы верно указали ID идеи.')
 
         embed = message.embeds[0]
         if embed.title != f'Предложение #{id}':
             return await ctx.send(f'Вы не можете отредактировать идею которая уже была принята или отклонена.')
 
         embed.description = text + ' (отредактировано автором)'
+        embed._image = None
+        if ctx.message.attachments:
+            images = [x for x in ctx.message.attachments
+                      if x.filename.split('.')[-1] in ('png', 'jpg', 'jpeg', 'gif')]
+            if images:
+                embed.set_image(url=str(images[0].url))
+                if len(ctx.message.attachments) > 1:
+                    embed.description += ('\n\n**Прикреплённые файлы**\n'
+                                        + '\n'.join(f'[{x.filename}]({x.url})' for x in ctx.message.attachments
+                                                    if x.filename != images[0].filename))
+            else:
+                embed.description += ('\n\n**Прикреплённые файлы**\n'
+                                      + '\n'.join(f'[{x.filename}]({x.url})' for x in ctx.message.attachments))
+
 
         await message.edit(embed=embed)
         await ctx.react('👌')
