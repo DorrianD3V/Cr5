@@ -268,7 +268,8 @@ class Utils(commands.Cog, name='Утилиты'):
             return
         message = await channel.fetch_message(payload.message_id)
         embed = message.embeds[0]
-        if str(payload.emoji) == '✅':
+
+        if str(payload.emoji) == '✅' and not embed.title.endswith('(принято)'):
             embed.title = f'Предложение #{idea["idea_id"]} (принято)'
             embed.color = discord.Colour.green().value
             try:
@@ -279,7 +280,7 @@ class Utils(commands.Cog, name='Утилиты'):
                                                         icon_url=channel.guild.icon_url))
             except (discord.Forbidden, discord.NotFound):
                 pass
-        else:
+        elif str(payload.emoji) == '❌' and not embed.title.endswith('(отказано)'):
             embed.title = f'Предложение #{idea["idea_id"]} (отказано)'
             embed.color = discord.Colour.red().value
             try:
@@ -290,6 +291,8 @@ class Utils(commands.Cog, name='Утилиты'):
                                                         icon_url=channel.guild.icon_url))
             except (discord.Forbidden, discord.NotFound):
                 pass
+        else:
+            return
         
         await message.edit(embed=embed)
 
