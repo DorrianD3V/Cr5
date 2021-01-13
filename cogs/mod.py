@@ -82,9 +82,36 @@ class Moderation(commands.Cog, name='Модерация'):
     @commands.command(name='warn',
                       usage='<пользователь> [причина]')
     @commands.has_permissions(manage_messages=True)
-    async def warn(self, ctx: commands.Context, user: discord.Member, *, reason = None):
+    async def warn(self, ctx: commands.Context, member: discord.Member, *, reason = None):
         """Выдать предупреждение пользователю"""
+        if reason and len(reason) > 200:
+            return await ctx.send('Максимальная длина причины — **200 символов**.')
+
+        if member.top_role.position >= ctx.author.top_role.position:
+            return await ctx.send('Вы не можете выдать предупреждение этому пользователю, '
+                                  'так как его роль выше или на равне с вашей.')
+        if member.guild_permissions > ctx.author.guild_permissions:
+            return await ctx.send('Вы не можете выдать предупреждение этому пользователю, '
+                                  'так как его права выше чем ваши')
         
+        await self.bot.db.execute('INSERT INTO warns VALUES ($1, $2, $3, $4)',
+                                  [ctx.guild.id, member.id, ctx.author.id, reason])
+        warns = len(await self.bot.db.execute('SELECT * FROM warns WHERE guild_id=$1 AND user_id=$2',
+                                              [ctx.guild.id, member.id],
+                                              as_dict=False))
+        
+        try:
+            await member.send(embed=discord.Embed(title=f'Вам было выдано предупреждение на сервере {ctx.guild}') \
+                                           .set_thumbnail(url=ctx.guild.icon_url) \
+                                           .add_field(name='Модератор',
+                                                      value=str(ctx.author)) \
+                                           .add_field(name='Причина',
+                                                      value=reason or 'Не установлена') \
+                                           .set_footer(text=f'Предупреждение #{warns}'))
+        except discord.Forbidden:
+            pass
+        finally:
+            await ctx.send(f'Пользователю **{member}** было выдано предупреждение :ok_hand: (предупреждение #{warns})')
 
 
 def setup(bot: commands.Bot):
