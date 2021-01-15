@@ -37,7 +37,7 @@ class Moderation(commands.Cog, name='Модерация'):
                                                       value=str(ctx.author)) \
                                            .add_field(name='Причина',
                                                       value=reason or 'Не установлена'))
-        except discord.Forbidden:
+        except (discord.Forbidden, discord.HTTPException):
             pass
         finally:
             await member.kick(reason=f'[Выгнан {ctx.author}] {reason or "Причина не установлена"}')
@@ -73,7 +73,7 @@ class Moderation(commands.Cog, name='Модерация'):
                                                       value=str(ctx.author)) \
                                            .add_field(name='Причина',
                                                       value=reason or 'Не установлена'))
-        except discord.Forbidden:
+        except (discord.Forbidden, discord.HTTPException):
             pass
         finally:
             await member.ban(reason=f'[Забанен {ctx.author}] {reason or "Причина не установлена"}')
@@ -108,10 +108,38 @@ class Moderation(commands.Cog, name='Модерация'):
                                            .add_field(name='Причина',
                                                       value=reason or 'Не установлена') \
                                            .set_footer(text=f'Предупреждение #{warns}'))
-        except discord.Forbidden:
+        except (discord.Forbidden, discord.HTTPException):
             pass
         finally:
             await ctx.send(f'Пользователю **{member}** было выдано предупреждение :ok_hand: (предупреждение #{warns})')
+
+    @commands.command(name='purge',
+                      aliases=['clear'],
+                      usage='<количество сообщений от 1 до 100>')
+    @commands.has_permissions(manage_messages=True)
+    @commands.bot_has_permissions(manage_messages=True)
+    async def purge(self, ctx: commands.Context, amount: int):
+        """Удалить определённое количество сообщений в текущем канале"""
+        if amount > 100 or amount < 1:
+            return await ctx.send(f'Количество сообщений должно быть от **1** до **100**.')
+        
+        await ctx.channel.purge(limit=amount)
+
+    @commands.command(name='lockdown', usage='[канал]')
+    @commands.has_permissions(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def lockdown(self, ctx: commands.Context, channel: discord.TextChannel = None):
+        """Запрещает всем отправлять сообщения в укзааном вами канале."""
+        if not channel:
+            channel = ctx.channel
+        permissions = channel.overwrites_for(ctx.guild.default_role)
+        if permissions.send_messages == False:
+            permissions.send_messages = None
+            await ctx.react('✅', '🔓')
+        else:
+            permissions.send_messages = False
+            await ctx.react('✅', '🔒')
+        await channel.set_permissions(ctx.guild.default_role, **dict(permissions))
 
 
 def setup(bot: commands.Bot):

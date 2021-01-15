@@ -35,8 +35,9 @@ PERMISSIONS = {
 }
 
 GIFS = {
-    'kick_members': 'https://cdn.discordapp.com/attachments/797478058679599114/797478956840255538/FrnNjibdxI.gif',
-    'ban_members': 'https://cdn.discordapp.com/attachments/797478058679599114/797479128252547093/GNTuKtuaiQ.gif'
+    'kick_members': 'https://cdn.discordapp.com/attachments/797478058679599114/799317288850554951/kq80tI8dIn.gif',
+    'ban_members': 'https://cdn.discordapp.com/attachments/797478058679599114/799317288040792104/mHPGYwEz2p.gif',
+    'manage_messages': 'https://cdn.discordapp.com/attachments/797478058679599114/799317289946185809/cpSPaPBLSx.gif'
 }
 
 
