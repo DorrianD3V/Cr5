@@ -31,6 +31,18 @@ class Events(commands.Cog):
                     resp = await after.reply(embed=embed, mention_author=True)
                     CACHED_RESPONSES[after.id] = resp.id
 
+    @commands.Cog.listener()
+    async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
+        if not channel.guild.me.guild_permissions.manage_roles:
+            return
+        role = discord.utils.get(channel.guild.roles, name='[Cr5] Muted')
+        if not role:
+            return
+        await channel.set_permissions(role,
+                                      send_messages=False,
+                                      add_reactions=False,
+                                      speak=False)
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(Events(bot))

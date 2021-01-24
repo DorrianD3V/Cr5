@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from humanize import precisedelta
+
 
 class Moderation(commands.Cog, name='Модерация'):
     """Команды, позволяющие вам модерировать сервер."""
@@ -140,6 +142,82 @@ class Moderation(commands.Cog, name='Модерация'):
             permissions.send_messages = False
             await ctx.react('✅', '🔒')
         await channel.set_permissions(ctx.guild.default_role, **dict(permissions))
+
+    @commands.command(name='mute', usage='<пользователь> [время] [причина]')
+    @commands.has_permissions(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def mute(self, ctx: commands.Context, member: discord.Member, *args):
+        """Замутить пользователя
+        
+        **Подсказка:**
+        Время можно указать, написав цифру и добавив соотвествующий символ в конец.
+        **s** — секунды, **m** — минуты, **h** — часы, **d** — дни
+        Пример: `5s 10m` - 5 секунд 10 минут"""
+        if discord.utils.get(member.roles, name='[Cr5] Muted'):
+            return await ctx.send(f'**{member}** уже замучен :no_entry:')
+        
+        time = 0
+        reason = None
+        values = {
+            's': 1,
+            'm': 60,
+            'h': 60 * 60,
+            'd': 24 * 60 * 60
+        }
+
+        for i, arg in enumerate(args):
+            if arg[:-1].isnumeric() and arg[-1] in values:
+                time += int(arg[:-1]) * values[arg[-1]]
+            else:
+                reason = ' '.join(args[i:])
+
+        if reason and len(reason) > 200:
+            return await ctx.send('Максимальная длина причины — **200 символов**.')
+
+        if member.top_role.position >= ctx.author.top_role.position:
+            return await ctx.send('Вы не можете замутить этого пользователя, '
+                                  'так как его роль выше или на равне с вашей.')
+        if member.guild_permissions > ctx.author.guild_permissions:
+            return await ctx.send('Вы не можете замутить этого пользователя, '
+                                  'так как его права выше чем ваши')
+
+        if member.top_role.position >= ctx.guild.me.top_role.position:
+            return await ctx.send('Я не могу замутить этого пользователя, '
+                                  'так как его роль выше или на равне с моей.')
+        if member.guild_permissions > ctx.guild.me.guild_permissions:
+            return await ctx.send('Я не могу замутить этого пользователя, '
+                                  'так как его права выше чем мои')
+
+        try:
+            await member.send(embed=discord.Embed(title=f'Вы были замучены на {ctx.guild}') \
+                                           .set_thumbnail(url=ctx.guild.icon_url) \
+                                           .add_field(name='Модератор',
+                                                      value=str(ctx.author)) \
+                                           .add_field(name='Причина',
+                                                      value=reason or 'Не установлена') \
+                                           .add_field(name='Длительность мута',
+                                                      value=time or '∞'))
+        except (discord.Forbidden, discord.HTTPException):
+            pass
+        finally:
+            await ctx.send(f'Пользователь **{member}** замучен {f"на {precisedelta(time)}" if time else ""}:ok_hand:')
+
+        role = discord.utils.get(ctx.guild.roles, name='[Cr5] Muted')
+        if not role:
+            role = await ctx.guild.create_role(name='[Cr5] Muted',
+                                               permissions=discord.Permissions(send_messages=False,
+                                                                               add_reactions=False,
+                                                                               speak=False),
+                                               reason=f'Пользователь {member} замучен модератором {ctx.author}')
+            await member.add_roles(role)
+            for channel in ctx.guild.channels:
+                await channel.set_permissions(role,
+                                              send_messages=False,
+                                              add_reactions=False,
+                                              speak=False,
+                                              reason=f'Пользователь {member} замучен модератором {ctx.author}')
+        else:
+            await member.add_roles(role, reason=f'[Замучен {ctx.author}] {reason or "Причина не установлена"}')
 
 
 def setup(bot: commands.Bot):
