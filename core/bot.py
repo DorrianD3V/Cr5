@@ -38,6 +38,7 @@ class Bot(commands.AutoShardedBot):
     async def on_connect(self):
         Logger.info(f'Connected to Discord API as {self.user} ({self.user.id})')
         await self.db.connect()
+        await self.db.setup()
         await self.change_presence(activity=self.config.activity)
 
     async def on_message(self, message: discord.Message):
