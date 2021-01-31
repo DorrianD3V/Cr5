@@ -225,6 +225,13 @@ class Base(commands.Cog, name='Основное'):
                              f'**[Настроить]({discord.utils.oauth_url(bot.id, permissions=discord.Permissions(-1))})**\n'
                              'Вы можете выбрать специальные права, которые бот будет иметь.')
         
+        if bot.id == self.bot.user.id:
+            embed.add_field(name='\u200b\nДоп. ссылки',
+                            value=f'**[GitHub](https://github.com/DorrianD3V/Cr5)**\n'
+                                  'GitHub-репозиторий с исходным кодом бота\n\n'
+                                  f'**[Сервер поддержки](https://discord.gg/gEHSVK5779)**\n'
+                                  'На сервере поддержки вы можете получить помощь по боту')
+
         await ctx.send(embed=embed)
  
 
