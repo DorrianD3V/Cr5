@@ -111,6 +111,9 @@ class Moderation(commands.Cog, name='Модерация'):
         if reason and len(reason) > 200:
             return await ctx.send('Максимальная длина причины — **200 символов**.')
 
+        if member.bot:
+            return await ctx.send('Зачем выдавать варны ботам?')
+
         if member.top_role.position >= ctx.author.top_role.position:
             return await ctx.send('Вы не можете выдать предупреждение этому пользователю, '
                                   'так как его роль выше или на равне с вашей.')
