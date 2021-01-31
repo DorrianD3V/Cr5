@@ -4,6 +4,8 @@ import os, sys
 from discord.ext import commands
 from datetime import datetime
 
+from jishaku.codeblocks import codeblock_converter
+
 
 class Owner(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -34,6 +36,20 @@ class Owner(commands.Cog):
         await ctx.send(f'Restarting...')
         await self.bot.logout()
         os.execl(sys.executable, sys.executable, *sys.argv)
+
+    @commands.command(name='sql', aliases=['psql'])
+    async def sql(self, ctx: commands.Context, *, src: codeblock_converter):
+        await ctx.send(
+            str(
+                [
+                    dict(x) for x in
+                    await self.bot.db.execute(
+                        src.content.format({'author': str(ctx.author.id), 'guild': str(ctx.guild.id)}),
+                        as_dict=False
+                    )
+                ]
+            )
+        )
 
 
 def setup(bot: commands.Bot):
