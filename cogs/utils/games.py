@@ -22,7 +22,6 @@ class Utils(commands.Cog, name='Утилиты'):
                                                         icon_url=f'https://mc-heads.net/avatar/{player}') \
                                             .set_image(url=f'https://mc-heads.net/body/{player}'))
 
-
     @commands.command(name='osu!',
                       aliases=['osu'],
                       usage='<ник игрока>')

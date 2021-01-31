@@ -36,9 +36,13 @@ class Base(commands.Cog, name='Основное'):
         m = await ctx.send('Получение информации...')
         end = datetime.datetime.now()
         
-        data['Задержка вебсокета'] = f'{round(self.bot.latency*1000, 2)} ms'
-        data['Отправление сообщений'] = f'{round((end - start).total_seconds() * 1000, 2)} ms'
-        data['Получение сообщений'] = f'N/A ms'
+        data['Вебсокет'] = f'{round(self.bot.latency*1000, 2)} ms'
+        data['HTTP'] = f'{round((end - start).total_seconds() * 1000, 2)} ms'
+
+        async with self.bot.session.get('https://discordstatus.com/api/v2/status.json') as resp:
+            data['Статус Discord-a'] = (await resp.json())['status']['description']
+        async with self.bot.session.get('https://discordstatus.com/metrics-display/ztt4777v23lf/day.json') as resp:
+            data['Задержка API'] = f'{(await resp.json())["summary"]["last"]} ms'
 
         embed = discord.Embed(title='Пинг бота') \
                        .set_author(name=self.bot.user.name,

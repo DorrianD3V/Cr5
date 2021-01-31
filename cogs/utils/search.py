@@ -7,7 +7,6 @@ from urllib.parse import quote
 class Utils(commands.Cog, name='Утилиты'):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        # e6702337c52c4f661
     
     @commands.command(name='google',
                       usage='<запрос>')
