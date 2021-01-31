@@ -21,6 +21,7 @@ if __name__ == "__main__":
               intents=discord.Intents.all(),
               allowed_mentions=discord.AllowedMentions.none(),
               chunk_members_at_startup=True,
-              help_command=None)
+              help_command=None,
+              member_cache_flags=discord.MemberCacheFlags.none())
     
     bot.run()
