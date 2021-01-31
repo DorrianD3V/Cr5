@@ -1,6 +1,8 @@
 import discord
+import asyncio
 from discord.ext import commands
 
+from time import time as timestamp
 from humanize import precisedelta
 
 
@@ -8,7 +10,27 @@ class Moderation(commands.Cog, name='Модерация'):
     """Команды, позволяющие вам модерировать сервер."""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.bot.loop.create_task(self.unmute_task_setup())
     
+    async def unmute_task_setup(self):
+        for mute in await self.bot.db.execute('SELECT * FROM muted', as_dict=False):
+            self.bot.loop.create_task(self.unmute_task(mute))
+    
+    async def unmute_task(self, data):
+        await asyncio.sleep(data['expiries'] - timestamp())
+        guild = self.bot.get_guild(data['guild_id'])
+        member = await guild.fetch_member(data['user_id'])
+        try:
+            if discord.utils.get(member.roles, name='[Cr5] Muted'):
+                await member.remove_roles(discord.utils.get(guild.roles, name='[Cr5] Muted'))
+                await member.send(embed=discord.Embed(title=f'Вы были автоматически размучены на {guild}') \
+                                               .set_thumbnail(url=guild.icon_url))
+        except (discord.Forbidden, discord.HTTPException):
+            pass
+        finally:
+            await self.bot.db.execute('DELETE FROM muted WHERE guild_id=$1 AND user_id=$2',
+                                      [guild.id, member.id])
+
     @commands.command(name='kick',
                       usage='<пользователь> [причина]')
     @commands.has_permissions(kick_members=True)
@@ -196,11 +218,27 @@ class Moderation(commands.Cog, name='Модерация'):
                                            .add_field(name='Причина',
                                                       value=reason or 'Не установлена') \
                                            .add_field(name='Длительность мута',
-                                                      value=time or '∞'))
+                                                      value=precisedelta(time) or '∞'))
         except (discord.Forbidden, discord.HTTPException):
             pass
         finally:
             await ctx.send(f'Пользователь **{member}** замучен {f"на {precisedelta(time)}" if time else ""}:ok_hand:')
+            if time:
+                self.bot.loop.create_task(
+                    self.unmute_task(
+                        {
+                            "guild_id": ctx.guild.id,
+                            "user_id": member.id,
+                            "expiries": timestamp() + time
+                        }
+                    )
+                )
+                await self.bot.db.execute('INSERT INTO muted VALUES ($1, $2, $3)',
+                                          [
+                                              ctx.guild.id,
+                                              member.id,
+                                              timestamp() + time
+                                          ])
 
         role = discord.utils.get(ctx.guild.roles, name='[Cr5] Muted')
         if not role:
@@ -218,6 +256,28 @@ class Moderation(commands.Cog, name='Модерация'):
                                               reason=f'Пользователь {member} замучен модератором {ctx.author}')
         else:
             await member.add_roles(role, reason=f'[Замучен {ctx.author}] {reason or "Причина не установлена"}')
+
+    @commands.command(name='unmute', usage='<пользователь> [причина]')
+    @commands.has_permissions(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def unmute(self, ctx: commands.Context, member: discord.Member, *, reason = None):
+        """Размутить пользователя"""
+        if not discord.utils.get(member.roles, name='[Cr5] Muted'):
+            return await ctx.send('Пользователь не замучен')
+        await member.remove_roles(discord.utils.get(ctx.guild.roles, name='[Cr5] Muted'))
+        try:
+            await member.send(embed=discord.Embed(title=f'Вы размучены на {ctx.guild}') \
+                                .set_thumbnail(url=ctx.guild.icon_url) \
+                                .add_field(name='Модератор',
+                                            value=str(ctx.author)) \
+                                .add_field(name='Причина',
+                                            value=reason or 'Не установлена'))
+        except (discord.HTTPException, discord.Forbidden):
+            pass
+        finally:
+            await self.bot.db.execute('DELETE FROM muted WHERE user_id=$1 AND guild_id=$2',
+                                      [member.id, ctx.guild.id])
+            await ctx.send(f'Вы размутили **{member}** :ok_hand:')
 
 
 def setup(bot: commands.Bot):
