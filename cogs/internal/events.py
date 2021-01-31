@@ -43,6 +43,18 @@ class Events(commands.Cog):
                                       add_reactions=False,
                                       speak=False)
 
+    @commands.Cog.listener()
+    async def on_guild_join(self, guild: discord.Guild):
+        channel = await self.bot.fetch_channel(self.bot.config.channels['server_log'])
+        await channel.send(f'Меня добавили на **{guild}** ({guild.id}) с {guild.member_count} участниками\n'
+                           f'Теперь у меня **{len(self.bot.guilds)}** серверов')
+
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild: discord.Guild):
+        channel = await self.bot.fetch_channel(self.bot.config.channels['server_log'])
+        await channel.send(f'Меня убрали с сервера **{guild}** ({guild.id})\n'
+                           f'Теперь у меня **{len(self.bot.guilds)}** серверов')
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(Events(bot))
