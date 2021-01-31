@@ -104,7 +104,7 @@ class ErrorHandler(commands.Cog):
             exception = "\n".join(format_exception(type(error), error, error.__traceback__, 5, False))
             await ctx.send(embed=self.error_message('Произошла ошибка при выполнении этой команды.',
                                                     f'```py\n{exception[:1950]}\n```\n\n'
-                                                    'Обратитесь к разработчикам бота на [сервере поддержки](https://discord.gg/gEHSVK5779), '
+                                                    'Обратитесь к разработчикам бота на [сервере поддержки](https://discord.gg/rEpfsB9DUx), '
                                                     'если вы считаете, что эта ошибка должна быть исправлена.'))
             channel = await self.bot.fetch_channel(self.bot.config.channels['exceptions'])
             await channel.send(exception[:2000])

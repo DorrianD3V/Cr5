@@ -35,7 +35,7 @@ class Utils(commands.Cog, name='Утилиты'):
             elif resp.status != 200:
                 embed.add_field(name='Ошибка',
                                 value=f'Произошла неизвестная ошибка с кодом **{resp.status}**.\n'
-                                      'Обратитесь к разработчикам бота на [сервере поддержки](https://discord.gg/gEHSVK5779) '
+                                      'Обратитесь к разработчикам бота на [сервере поддержки](https://discord.gg/rEpfsB9DUx) '
                                       'за помощью.')
                 embed.color = discord.Colour.red().value
             else:

@@ -172,7 +172,7 @@ class Base(commands.Cog, name='Основное'):
                                                     icon_url=ctx.author.avatar_url))
 
         await ctx.send(embed=discord.Embed(title='Ваш баг был успешно отправлен. Спасибо вам за желание нам помочь!',
-                                           description='Рекомендуем вам зайти на [сервер поддержки](https://discord.gg/gEHSVK5779).'))
+                                           description='Рекомендуем вам зайти на [сервер поддержки](https://discord.gg/rEpfsB9DUx).'))
 
     @commands.command(name='about')
     async def about(self, ctx: commands.Context):
@@ -194,7 +194,7 @@ class Base(commands.Cog, name='Основное'):
         embed.add_field(name='Ссылки',
                         value='[Добавить бота](https://discord.com/oauth2/authorize?client_id=795289995199381514&permissions=8&scope=bot)\n'
                               '[GitHub](https://github.com/DorrianD3V/Cr5)\n'
-                              '[Сервер поддержки](https://discord.gg/gEHSVK5779)')
+                              '[Сервер поддержки](https://discord.gg/rEpfsB9DUx)')
 
         embed.add_field(name='\u200b',
                         value='\u200b')
@@ -229,7 +229,7 @@ class Base(commands.Cog, name='Основное'):
             embed.add_field(name='\u200b\nДоп. ссылки',
                             value=f'**[GitHub](https://github.com/DorrianD3V/Cr5)**\n'
                                   'GitHub-репозиторий с исходным кодом бота\n\n'
-                                  f'**[Сервер поддержки](https://discord.gg/gEHSVK5779)**\n'
+                                  f'**[Сервер поддержки](https://discord.gg/rEpfsB9DUx)**\n'
                                   'На сервере поддержки вы можете получить помощь по боту')
 
         await ctx.send(embed=embed)

@@ -11,4 +11,4 @@
 #
 **[Пригласить бота](https://discord.com/oauth2/authorize?client_id=795289995199381514&permissions=8&scope=bot)**
 
-**[Сервер поддержки](https://discord.gg/gEHSVK5779)**
+**[Сервер поддержки](https://discord.gg/rEpfsB9DUx)**
