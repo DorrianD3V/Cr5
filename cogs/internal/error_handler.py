@@ -100,6 +100,26 @@ class ErrorHandler(commands.Cog):
                                                            'Данная команда использует задержку. '
                                                            f'Пожалуйста, повторите позже через {precisedelta(error.retry_after)}.'))
 
+        elif isinstance(error, discord.Forbidden):
+            try:
+                return await ctx.send(embed=self.error_message(
+                    'Ошибка',
+                    'Произошла ошибка при выполнении команды, связанная с '
+                    'отсутствием прав. Убедитесь, что у бота есть нужные права '
+                    '(отправлять сообщения, добавлять реакции и прикреплять ссылки)\n\n'
+                    'Если же у бота есть все права, сообщите нам о баге на [сервере поддержки](https://discord.gg/rEpfsB9DUx) '
+                    f'или через команду `{ctx.prefix}.bug`'
+                ))
+            except discord.Forbidden:
+                return await ctx.send(
+                    '> **Ошибка**',
+                    'Произошла ошибка при выполнении команды, связанная с '
+                    'отсутствием прав. Убедитесь, что у бота есть нужные права '
+                    '(отправлять сообщения, добавлять реакции и прикреплять ссылки)\n\n'
+                    'Если же у бота есть все права, сообщите нам о баге на сервере поддержки бота '
+                    f'или через команду `{ctx.prefix}.bug`'
+                )
+
         else:
             exception = "\n".join(format_exception(type(error), error, error.__traceback__, 5, False))
             await ctx.send(embed=self.error_message('Произошла ошибка при выполнении этой команды.',

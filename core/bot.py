@@ -19,6 +19,10 @@ class Bot(commands.AutoShardedBot):
         self.paginators = {}
         self.cache = CacheManager(self.loop)
     
+    async def on_error(self, *args, **kwargs):
+        channel = await self.fetch_channel(self.config.channels['exceptions'])
+        await channel.send(traceback.format_exc()[:2000])
+
     async def get_prefix(self, message: discord.Message):
         prefix = self.command_prefix
 
